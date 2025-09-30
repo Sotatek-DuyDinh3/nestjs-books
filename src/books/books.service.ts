@@ -2,10 +2,17 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { Book } from './entities/book.entity';
+import { generateBooks } from './seed';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class BooksService {
   private books: Book[] = [];
+
+  constructor(private configService: ConfigService) {
+    const countBooks = this.configService.get<number>('COUNT_BOOKS') || 8;
+    this.books = generateBooks(countBooks);
+  }
   create(createBookDto: CreateBookDto): Book {
     const newBook: Book = {
       id: Date.now().toString(),

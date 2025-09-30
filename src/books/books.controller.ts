@@ -84,6 +84,6 @@ export class BooksController {
   @ResponseMessage('Delete book successfully')
   remove(@Param('id') id: string) {
     this.booksService.remove(id);
-    return { success: true };
+    return;
   }
 }

@@ -16,7 +16,13 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
 
   // config validation pipe global
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   // config swagger
   const config = new DocumentBuilder()

@@ -1,77 +1,85 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-import { Book } from './entities/book.entity';
-import { generateBooks } from './seed';
+// import { generateBooks } from './seed';
 import { ConfigService } from '@nestjs/config';
-import { faker } from '@faker-js/faker';
+import mongoose, { Model } from 'mongoose';
+import { Book } from './interfaces/book.interface';
+import { BOOK_MODEL } from 'src/common/constants';
 
 @Injectable()
 export class BooksService {
-  private books: Book[] = [];
-
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @Inject(BOOK_MODEL) private bookModel: Model<Book>,
+  ) {
     const countBooks = this.configService.get<number>('COUNT_BOOKS') || 8;
-    this.books = generateBooks(countBooks);
+    // this.books = generateBooks(countBooks);
   }
-  create(createBookDto: CreateBookDto): Book {
+  create(createBookDto: CreateBookDto): Promise<Book> {
     if (!createBookDto.title?.trim()) {
       throw new BadRequestException('Title is required and cannot be empty');
     }
-    if (!createBookDto.author?.trim()) {
-      throw new BadRequestException('Author is required and cannot be empty');
-    }
-    const newBook: Book = {
-      id: faker.string.uuid(),
+    return this.bookModel.create({
       ...createBookDto,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
-    this.books.push(newBook);
-    return newBook;
+    });
   }
 
-  findAll(): Book[] {
-    return this.books;
+  findAll(): Promise<Book[]> {
+    return this.bookModel
+      .find()
+      .populate({
+        path: 'authors',
+        select: {
+          name: 1,
+          bio: 1,
+          birthDate: 1,
+        },
+      })
+      .exec();
   }
 
   findOne(id: string) {
-    this.validateID(id);
-    const book = this.books.find((book) => book.id === id);
-    if (!book) throw new BadRequestException(`Not found book with id: ${id}`);
-    return book;
+    this.validateObjectId(id);
+    return this.bookModel
+      .findById(id)
+      .populate({
+        path: 'authors',
+        select: {
+          name: 1,
+          bio: 1,
+          birthDate: 1,
+        },
+      })
+      .exec();
   }
 
   update(id: string, updateBookDto: UpdateBookDto) {
-    this.validateID(id);
+    this.validateObjectId(id);
     if (updateBookDto.title !== undefined && !updateBookDto.title?.trim()) {
       throw new BadRequestException('Title cannot be empty');
     }
-    if (updateBookDto.author !== undefined && !updateBookDto.author?.trim()) {
-      throw new BadRequestException('Author cannot be empty');
-    }
-    const book = this.findOne(id);
-    const updated: Book = {
-      ...book,
-      ...updateBookDto,
-      updatedAt: new Date().toISOString(),
-    };
-    const idx = this.books.findIndex((book) => book.id === id);
-    this.books[idx] = updated;
-    return updated;
+    // if (updateBookDto.author !== undefined && !updateBookDto.author?.trim()) {
+    //   throw new BadRequestException('Author cannot be empty');
+    // }
+    return this.bookModel
+      .updateOne(
+        { _id: id },
+        { ...updateBookDto, updatedAt: new Date().toISOString() },
+      )
+      .exec();
   }
 
   remove(id: string) {
-    this.validateID(id);
-    const idx = this.books.findIndex((book) => book.id === id);
-    if (idx === -1)
-      throw new BadRequestException(`Not found book with id: ${id}`);
-    this.books.splice(idx, 1);
+    this.validateObjectId(id);
+    return this.bookModel.deleteOne({ _id: id }).exec();
   }
 
-  private validateID(id: string) {
-    if (!id?.trim()) {
-      throw new BadRequestException('ID is required');
+  private validateObjectId(id: string): void {
+    if (!id?.trim() || !mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid ID format');
     }
   }
 }

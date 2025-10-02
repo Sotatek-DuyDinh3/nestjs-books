@@ -1,0 +1,28 @@
+services:
+  mongodb:
+    image: mongo:6.0.6
+    container_name: nest-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb:/data/db
+
+  be-nest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nest-backend
+    environment:
+      - PORT=8080
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://root:123456@mongodb:27017/nest-book-management?authSource=admin
+    ports:
+      - '8080:8080'
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb:

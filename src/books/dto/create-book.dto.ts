@@ -5,7 +5,9 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsDate,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import mongoose from 'mongoose';
 
 export class CreateBookDto {
@@ -28,8 +30,13 @@ export class CreateBookDto {
   @IsArray({ message: 'Authors must be an array' })
   authors: mongoose.Schema.Types.ObjectId[];
 
-  @ApiProperty({ example: '1937-09-21', required: false })
-  @IsString({ message: 'PublishedAt must be a string' })
+  @ApiProperty({
+    example: '2023-10-02',
+    required: false,
+    description: 'Publication date in ISO format',
+  })
   @IsOptional()
-  publishedAt?: string;
+  @Type(() => Date)
+  @IsDate({ message: 'PublishedAt must be a valid date' })
+  publishedAt?: Date;
 }

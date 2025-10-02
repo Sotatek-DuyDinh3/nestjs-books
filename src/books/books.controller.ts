@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -16,6 +17,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { ResponseMessage } from 'src/decorator/customize';
@@ -45,9 +47,25 @@ export class BooksController {
   })
   @ApiOkResponse({ description: 'Success' })
   @ApiOkResponse({ description: 'List of books', type: [Object] })
+  @ApiQuery({
+    name: 'current',
+    required: false,
+    type: Number,
+    description: 'Current page number',
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    type: Number,
+    description: 'Number of items per page',
+  })
   @ResponseMessage('List of books')
-  findAll() {
-    return this.booksService.findAll();
+  findAll(
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() query: string,
+  ) {
+    return this.booksService.findAll(+currentPage, +limit, query);
   }
 
   @Get(':id')

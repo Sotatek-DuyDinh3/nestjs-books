@@ -10,7 +10,7 @@ export const BookSchema = new mongoose.Schema({
     },
   ],
   description: { type: String, required: true },
-  publishedAt: { type: String, required: false },
+  publishedAt: { type: Date, required: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

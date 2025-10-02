@@ -4,7 +4,7 @@ export interface Book extends Document {
   title: string;
   description: string;
   author: string;
-  publishedAt: string;
+  publishedAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }

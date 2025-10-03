@@ -53,6 +53,7 @@ type Book = {
   createdAt: Date;
   updatedAt: Date;
   isDeleted: boolean;
+  isPremium: boolean;
 };
 
 async function generateAuthors(): Promise<Author[]> {
@@ -95,6 +96,7 @@ async function generateBooks(authors: Author[]): Promise<Book[]> {
       createdAt: new Date(),
       updatedAt: new Date(),
       isDeleted: false,
+      isPremium: faker.datatype.boolean(),
     };
     books.push(book);
   }

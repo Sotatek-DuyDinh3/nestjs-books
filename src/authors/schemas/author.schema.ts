@@ -1,16 +1,33 @@
-import * as mongoose from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
+import { Book } from 'src/books/schemas/book.schema';
 
-export const AuthorSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  bio: { type: String, required: false },
-  books: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'Book',
-    },
-  ],
-  birthDate: { type: String, required: false },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+export type AuthorDocument = HydratedDocument<Author>;
+@Schema({ timestamps: true })
+export class Author {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  bio: string;
+
+  @Prop()
+  birthDate: string;
+
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Book' }] })
+  books?: mongoose.Schema.Types.ObjectId[];
+
+  @Prop()
+  createdAt?: Date;
+
+  @Prop()
+  updatedAt?: Date;
+
+  @Prop()
+  isDeleted?: boolean;
+
+  @Prop()
+  deletedAt?: Date;
+}
+
+export const AuthorSchema = SchemaFactory.createForClass(Author);

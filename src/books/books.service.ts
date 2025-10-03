@@ -1,22 +1,18 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
-// import { generateBooks } from './seed';
-import { ConfigService } from '@nestjs/config';
-import mongoose, { Model } from 'mongoose';
-import { Book } from './interfaces/book.interface';
-import { BOOK_MODEL } from 'src/common/constants';
+import mongoose from 'mongoose';
 import aqp from 'api-query-params';
+import { InjectModel } from '@nestjs/mongoose';
+import { Book, BookDocument } from './schemas/book.schema';
+import type { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 
 @Injectable()
 export class BooksService {
   constructor(
-    private configService: ConfigService,
-    @Inject(BOOK_MODEL) private bookModel: Model<Book>,
-  ) {
-    const countBooks = this.configService.get<number>('COUNT_BOOKS') || 8;
-    // this.books = generateBooks(countBooks);
-  }
+    @InjectModel(Book.name) private bookModel: SoftDeleteModel<BookDocument>,
+  ) {}
+
   async create(createBookDto: CreateBookDto): Promise<Book> {
     if (!createBookDto.title?.trim()) {
       throw new BadRequestException('Title is required and cannot be empty');
@@ -105,7 +101,7 @@ export class BooksService {
 
   async remove(id: string) {
     this.validateObjectId(id);
-    return await this.bookModel.deleteOne({ _id: id }).exec();
+    return this.bookModel.softDelete({ _id: id });
   }
 
   private validateObjectId(id: string): void {

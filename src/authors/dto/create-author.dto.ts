@@ -20,15 +20,19 @@ export class CreateAuthorDto {
   })
   @IsOptional()
   @IsString({ message: 'Bio must be a string' })
-  bio?: string;
+  bio: string;
 
-  @ApiProperty({ example: ['64b64c4f5311236168a109ca'] })
+  @ApiProperty({
+    example: ['64b64c4f5311236168a109ca'],
+    required: false,
+  })
+  @IsOptional()
   @IsArray({ message: 'Books must be an array' })
   @IsMongoId({
     each: true,
     message: 'Each book must be a valid Mongo ID',
   })
-  books: mongoose.Schema.Types.ObjectId[];
+  books?: mongoose.Schema.Types.ObjectId[];
 
   @ApiProperty({
     example: '1892-01-03',

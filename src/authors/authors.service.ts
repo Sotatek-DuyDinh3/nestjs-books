@@ -1,22 +1,21 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
-import { Model } from 'mongoose';
-import { Author } from './interfaces/author.interface';
 import * as mongoose from 'mongoose';
 import aqp from 'api-query-params';
-import { AUTHOR_MODEL } from 'src/common/constants';
+import { InjectModel } from '@nestjs/mongoose';
+import { Author, AuthorDocument } from './schemas/author.schema';
+import type { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 
 @Injectable()
 export class AuthorsService {
   constructor(
-    @Inject(AUTHOR_MODEL)
-    private authorModel: Model<Author>,
+    @InjectModel(Author.name)
+    private authorModel: SoftDeleteModel<AuthorDocument>,
   ) {}
 
   async create(createAuthorDto: CreateAuthorDto): Promise<Author> {
@@ -111,10 +110,7 @@ export class AuthorsService {
 
   async remove(id: string) {
     this.validateObjectId(id);
-    const author = await this.authorModel.findByIdAndDelete(id);
-    if (!author) {
-      throw new NotFoundException('Author not found');
-    }
+    return this.authorModel.softDelete({ _id: id });
   }
 
   private validateObjectId(id: string): void {

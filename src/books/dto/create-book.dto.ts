@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   IsDate,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import mongoose from 'mongoose';
@@ -39,4 +40,14 @@ export class CreateBookDto {
   @Type(() => Date)
   @IsDate({ message: 'PublishedAt must be a valid date' })
   publishedAt?: Date;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  @ApiProperty({
+    example: false,
+    required: false,
+    description: 'Is premium book',
+  })
+  isPremium?: boolean;
 }

@@ -20,6 +20,9 @@ export class Book {
   })
   authors: mongoose.Schema.Types.ObjectId[];
 
+  @Prop({ default: false })
+  isPremium: boolean;
+
   @Prop()
   createdAt?: Date;
 

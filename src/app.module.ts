@@ -7,6 +7,8 @@ import { DatabasesModule } from './databases/databases.module';
 import { AuthorsModule } from './authors/authors.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
     BooksModule,
     DatabasesModule,
     AuthorsModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Req,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -20,7 +21,13 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { ResponseMessage } from 'src/decorator/customize';
+import {
+  OptionalAuth,
+  Public,
+  ResponseMessage,
+  User,
+} from 'src/decorator/customize';
+import type { IUser } from 'src/users/users.interface';
 
 @ApiTags('Books APIs')
 @Controller('books')
@@ -40,6 +47,7 @@ export class BooksController {
     return this.booksService.create(createBookDto);
   }
 
+  @OptionalAuth()
   @Get()
   @ApiOperation({
     summary: 'Get list of books',
@@ -64,10 +72,12 @@ export class BooksController {
     @Query('current') currentPage: string,
     @Query('pageSize') limit: string,
     @Query() query: string,
+    @User() user: IUser,
   ) {
-    return this.booksService.findAll(+currentPage, +limit, query);
+    return this.booksService.findAll(+currentPage, +limit, query, user);
   }
 
+  @OptionalAuth()
   @Get(':id')
   @ApiOperation({
     summary: 'Get book detail',
@@ -76,8 +86,8 @@ export class BooksController {
   @ApiOkResponse({ description: 'Book detail', type: Object })
   @ApiNotFoundResponse({ description: 'Book not found' })
   @ResponseMessage('Book detail')
-  findOne(@Param('id') id: string) {
-    return this.booksService.findOne(id);
+  findOne(@Param('id') id: string, @User() user: IUser) {
+    return this.booksService.findOne(id, user);
   }
 
   @Patch(':id')

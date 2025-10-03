@@ -1,4 +1,8 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import mongoose from 'mongoose';
@@ -6,6 +10,7 @@ import aqp from 'api-query-params';
 import { InjectModel } from '@nestjs/mongoose';
 import { Book, BookDocument } from './schemas/book.schema';
 import type { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
+import { IUser } from 'src/users/users.interface';
 
 @Injectable()
 export class BooksService {
@@ -28,6 +33,7 @@ export class BooksService {
     currentPage: number,
     limit: number,
     query: string,
+    user?: IUser,
   ): Promise<{
     result: Book[];
     meta: {
@@ -45,6 +51,10 @@ export class BooksService {
     let offset = (currentPage - 1) * limit;
     let defaultLimit = limit ? limit : 10;
 
+    if (!user) {
+      filter.isPremium = false;
+    }
+
     const totalItems = (await this.bookModel.find(filter)).length;
     const totalPages = Math.ceil(totalItems / defaultLimit);
 
@@ -60,17 +70,17 @@ export class BooksService {
     return {
       result,
       meta: {
-        currentPage: currentPage,
+        currentPage,
         pageSize: limit,
-        totalPages: totalPages,
-        totalItems: totalItems,
+        totalPages,
+        totalItems,
       },
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, user?: IUser): Promise<Book> {
     this.validateObjectId(id);
-    return await this.bookModel
+    const book = await this.bookModel
       .findById(id)
       .populate({
         path: 'authors',
@@ -81,6 +91,18 @@ export class BooksService {
         },
       })
       .exec();
+
+    if (!book) {
+      throw new BadRequestException('Book not found');
+    }
+
+    if (book.isPremium && !user) {
+      throw new ForbiddenException(
+        'This book is premium. Please login to view.',
+      );
+    }
+
+    return book;
   }
 
   async update(id: string, updateBookDto: UpdateBookDto) {
@@ -88,9 +110,6 @@ export class BooksService {
     if (updateBookDto.title !== undefined && !updateBookDto.title?.trim()) {
       throw new BadRequestException('Title cannot be empty');
     }
-    // if (updateBookDto.author !== undefined && !updateBookDto.author?.trim()) {
-    //   throw new BadRequestException('Author cannot be empty');
-    // }
     return await this.bookModel
       .updateOne(
         { _id: id },

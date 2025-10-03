@@ -5,14 +5,18 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TransformInterceptor } from './core/transform.interceptor';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const configService = app.get(ConfigService);
 
-  // config transform interceptor global
+  // config jwt guard global
   const reflector = app.get(Reflector);
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
+
+  // config transform interceptor global
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
 
   // config validation pipe global
@@ -29,9 +33,23 @@ async function bootstrap() {
     .setTitle('Management Book API')
     .setDescription('The Book API description')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'Bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+      },
+      'token',
+    )
+    .addSecurityRequirements('token')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, documentFactory);
+  SwaggerModule.setup('swagger', app, documentFactory, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
   await app.listen(configService.get<string>('PORT') || 3000);
 }
